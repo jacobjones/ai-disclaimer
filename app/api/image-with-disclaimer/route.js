@@ -111,7 +111,7 @@ export async function GET(request) {
         </defs>
         <!-- Semi-transparent white text with drop shadow at bottom right -->
         <text x="${width - padding}" y="${height - padding}"
-              font-family="Arial, sans-serif" font-size="${fontSize}"
+              font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" font-weight="500"
               fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
               filter="url(#textShadow)">
           ${disclaimerText}
