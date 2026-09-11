@@ -110,7 +110,7 @@ export async function GET(request) {
           </filter>
         </defs>
         <!-- Semi-transparent white text with drop shadow at bottom right -->
-        <!-- Using Liberation Sans which is available on Linux/Vercel -->
+        <!-- Using Liberation Sans which is available on Vercel's Linux environment -->
         <text x="${width - padding}" y="${height - padding}"
               font-family="Liberation Sans, DejaVu Sans, sans-serif" font-size="${fontSize}" font-weight="500"
               fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
