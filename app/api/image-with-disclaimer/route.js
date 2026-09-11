@@ -1,5 +1,37 @@
 import sharp from 'sharp'
+import { create as createFont } from 'fontkit'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { getDisclaimerText, SUPPORTED_LOCALES } from '@/lib/locales'
+
+let cachedFont = null
+
+function loadFont() {
+  if (cachedFont) return cachedFont
+
+  const fontPath = join(process.cwd(), 'public/fonts/galano-grotesque/galano-grotesque-medium.woff2')
+  const fontBuffer = readFileSync(fontPath)
+  cachedFont = createFont(fontBuffer)
+  return cachedFont
+}
+
+// Renders text as actual glyph outlines (SVG paths) instead of relying on
+// font-family lookups, since serverless platforms like Vercel don't have any
+// fonts installed for Sharp/librsvg to resolve at render time.
+function textToGlyphPaths(text, fontSize, font) {
+  const scale = fontSize / font.unitsPerEm
+  const run = font.layout(text)
+
+  let penX = 0
+  const glyphs = run.glyphs.map((glyph, i) => {
+    const position = run.positions[i]
+    const x = penX + position.xOffset * scale
+    penX += position.xAdvance * scale
+    return { d: glyph.path.toSVG(), x }
+  })
+
+  return { glyphs, totalWidth: penX, scale }
+}
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
@@ -89,9 +121,19 @@ export async function GET(request) {
       console.log('Image dimensions after crop:', { width, height })
     }
 
-    // Create SVG with text overlay at bottom right
+    // Create SVG with text rendered as glyph outlines (bottom right)
     const padding = Math.max(12, Math.min(width, height) * 0.02)
     const fontSize = Math.max(21, height * 0.0225)
+
+    const font = loadFont()
+    const { glyphs, totalWidth, scale } = textToGlyphPaths(disclaimerText, fontSize, font)
+
+    const startX = width - padding - totalWidth
+    const baselineY = height - padding
+
+    const glyphPaths = glyphs
+      .map(({ d, x }) => `<path d="${d}" transform="translate(${startX + x}, ${baselineY}) scale(${scale}, ${-scale})"/>`)
+      .join('\n          ')
 
     const svg = `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -108,23 +150,21 @@ export async function GET(request) {
             </feMerge>
           </filter>
         </defs>
-        <!-- Semi-transparent white text with drop shadow -->
-        <text x="${width - padding}" y="${height - padding}"
-              font-family="Courier, monospace" font-size="${fontSize}" font-weight="bold"
-              fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
-              filter="url(#textShadow)">
-          ${disclaimerText}
-        </text>
+        <!-- Semi-transparent white text with drop shadow, rendered as glyph outlines -->
+        <g fill="white" opacity="0.9" filter="url(#textShadow)">
+          ${glyphPaths}
+        </g>
       </svg>
     `
 
     console.log('SVG overlay created')
 
-    // Composite SVG over image
+    // Composite SVG over image and convert to original format
     let output = sharp(imageBuffer).composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
 
-    // Convert to original format
+    // Convert to original format, with fallback to JPEG
     const mimeType = format ? `image/${format}` : 'image/jpeg'
+    // Normalize 'jpeg' to 'jpg' for file extension
     const ext = format === 'jpeg' ? 'jpg' : (format || 'jpg')
 
     if (format === 'png') {
@@ -134,6 +174,7 @@ export async function GET(request) {
     } else if (format === 'gif') {
       output = output.gif()
     } else {
+      // Default to JPEG for JPEG, unknown formats, etc.
       output = output.jpeg({ quality: 90 })
     }
 
