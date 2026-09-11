@@ -1,22 +1,14 @@
 import sharp from 'sharp'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { createCanvas } from 'canvas'
 import { getDisclaimerText, SUPPORTED_LOCALES } from '@/lib/locales'
 
-let fontDataUrl = null
+let fontPath = null
 
-function getFontDataUrl() {
-  if (fontDataUrl) return fontDataUrl
-
-  try {
-    const fontPath = join(process.cwd(), 'public/fonts/galano-grotesque/galano-grotesque-medium.woff2')
-    const fontBuffer = readFileSync(fontPath)
-    fontDataUrl = `data:font/woff2;base64,${fontBuffer.toString('base64')}`
-    return fontDataUrl
-  } catch (error) {
-    console.warn('Failed to load font file:', error)
-    return null
-  }
+function getFontPath() {
+  if (fontPath) return fontPath
+  return join(process.cwd(), 'public/fonts/galano-grotesque/galano-grotesque-medium.woff2')
 }
 
 export async function GET(request) {
@@ -107,51 +99,41 @@ export async function GET(request) {
       console.log('Image dimensions after crop:', { width, height })
     }
 
-    // Create SVG with text overlay at bottom right
+    // Create text overlay using Canvas
     // Match preview text sizing based on final image size (after crop if applicable)
     const padding = Math.max(12, Math.min(width, height) * 0.02)
     const fontSize = Math.max(21, height * 0.0225)
 
-    const fontUrl = getFontDataUrl()
-    const fontFace = fontUrl
-      ? `
-        @font-face {
-          font-family: 'Galano Grotesque';
-          src: url('${fontUrl}') format('woff2');
-          font-weight: 500;
-        }`
-      : ''
+    // Create canvas for text overlay
+    const canvas = createCanvas(width, height)
+    const ctx = canvas.getContext('2d')
 
-    const svg = `
-      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <style>${fontFace}</style>
-          <filter id="textShadow">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-            <feOffset dx="2" dy="2" result="offsetblur"/>
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.8"/>
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        <!-- Semi-transparent white text with drop shadow at bottom right -->
-        <text x="${width - padding}" y="${height - padding}"
-              font-family="${fontUrl ? 'Galano Grotesque' : 'Arial, sans-serif'}" font-size="${fontSize}" font-weight="500"
-              fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
-              filter="url(#textShadow)">
-          ${disclaimerText}
-        </text>
-      </svg>
-    `
+    try {
+      // Register the font if available
+      const fontFilePath = getFontPath()
+      ctx.font = `500 ${fontSize}px "Galano Grotesque", Arial, sans-serif`
+      canvas.registerFont(fontFilePath, { family: 'Galano Grotesque', weight: '500' })
+    } catch (e) {
+      console.warn('Could not register custom font, using fallback:', e.message)
+      ctx.font = `500 ${fontSize}px Arial, sans-serif`
+    }
 
-    console.log('SVG overlay created')
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'bottom'
 
-    // Composite SVG over image and convert to original format
-    let output = sharp(imageBuffer).composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+    // Draw drop shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+    ctx.fillText(disclaimerText, width - padding + 2, height - padding + 2)
+
+    // Draw main text
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillText(disclaimerText, width - padding, height - padding)
+
+    const textImageBuffer = canvas.toBuffer('image/png')
+    console.log('Canvas text overlay created, size:', textImageBuffer.length)
+
+    // Composite text overlay over image and convert to original format
+    let output = sharp(imageBuffer).composite([{ input: textImageBuffer, top: 0, left: 0 }])
 
     // Convert to original format, with fallback to JPEG
     const mimeType = format ? `image/${format}` : 'image/jpeg'
