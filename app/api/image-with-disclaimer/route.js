@@ -1,5 +1,23 @@
 import sharp from 'sharp'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { getDisclaimerText, SUPPORTED_LOCALES } from '@/lib/locales'
+
+let fontDataUrl = null
+
+function getFontDataUrl() {
+  if (fontDataUrl) return fontDataUrl
+
+  try {
+    const fontPath = join(process.cwd(), 'public/fonts/galano-grotesque/galano-grotesque-medium.woff2')
+    const fontBuffer = readFileSync(fontPath)
+    fontDataUrl = `data:font/woff2;base64,${fontBuffer.toString('base64')}`
+    return fontDataUrl
+  } catch (error) {
+    console.warn('Failed to load font file:', error)
+    return null
+  }
+}
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
@@ -94,9 +112,20 @@ export async function GET(request) {
     const padding = Math.max(12, Math.min(width, height) * 0.02)
     const fontSize = Math.max(21, height * 0.0225)
 
+    const fontUrl = getFontDataUrl()
+    const fontFace = fontUrl
+      ? `
+        @font-face {
+          font-family: 'Galano Grotesque';
+          src: url('${fontUrl}') format('woff2');
+          font-weight: 500;
+        }`
+      : ''
+
     const svg = `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <defs>
+          <style>${fontFace}</style>
           <filter id="textShadow">
             <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
             <feOffset dx="2" dy="2" result="offsetblur"/>
@@ -111,7 +140,7 @@ export async function GET(request) {
         </defs>
         <!-- Semi-transparent white text with drop shadow at bottom right -->
         <text x="${width - padding}" y="${height - padding}"
-              font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" font-weight="500"
+              font-family="${fontUrl ? 'Galano Grotesque' : 'Arial, sans-serif'}" font-size="${fontSize}" font-weight="500"
               fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
               filter="url(#textShadow)">
           ${disclaimerText}
