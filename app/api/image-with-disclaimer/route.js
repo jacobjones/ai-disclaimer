@@ -90,7 +90,6 @@ export async function GET(request) {
     }
 
     // Create SVG with text overlay at bottom right
-    // Match preview text sizing based on final image size (after crop if applicable)
     const padding = Math.max(12, Math.min(width, height) * 0.02)
     const fontSize = Math.max(21, height * 0.0225)
 
@@ -109,10 +108,9 @@ export async function GET(request) {
             </feMerge>
           </filter>
         </defs>
-        <!-- Semi-transparent white text with drop shadow at bottom right -->
-        <!-- Using Liberation Sans which is available on Vercel's Linux environment -->
+        <!-- Semi-transparent white text with drop shadow -->
         <text x="${width - padding}" y="${height - padding}"
-              font-family="Liberation Sans, DejaVu Sans, sans-serif" font-size="${fontSize}" font-weight="500"
+              font-family="Courier, monospace" font-size="${fontSize}" font-weight="bold"
               fill="white" opacity="0.9" text-anchor="end" dominant-baseline="text-bottom"
               filter="url(#textShadow)">
           ${disclaimerText}
@@ -122,12 +120,11 @@ export async function GET(request) {
 
     console.log('SVG overlay created')
 
-    // Composite SVG over image and convert to original format
+    // Composite SVG over image
     let output = sharp(imageBuffer).composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
 
-    // Convert to original format, with fallback to JPEG
+    // Convert to original format
     const mimeType = format ? `image/${format}` : 'image/jpeg'
-    // Normalize 'jpeg' to 'jpg' for file extension
     const ext = format === 'jpeg' ? 'jpg' : (format || 'jpg')
 
     if (format === 'png') {
@@ -137,7 +134,6 @@ export async function GET(request) {
     } else if (format === 'gif') {
       output = output.gif()
     } else {
-      // Default to JPEG for JPEG, unknown formats, etc.
       output = output.jpeg({ quality: 90 })
     }
 
