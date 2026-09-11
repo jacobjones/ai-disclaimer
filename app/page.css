@@ -175,7 +175,7 @@
 }
 
 .gallery-name {
-  padding: 0.75rem 0.75rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.8rem;
   color: #2c2a2a;
   text-overflow: ellipsis;
@@ -184,7 +184,7 @@
   text-align: center;
   background: #f6f5f2;
   font-weight: 500;
-  min-height: 1.5em;
+  min-height: 1.1em;
 }
 
 .pagination {
