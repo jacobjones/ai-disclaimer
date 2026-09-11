@@ -1,0 +1,27 @@
+{
+  "choices": [
+    {
+      "id": "6a8fe45342cbe42b3725398f",
+      "name": "AI-assisted"
+    },
+    {
+      "id": "6a8fe45342cbe42b37253991",
+      "name": "AI-generated"
+    },
+    {
+      "id": "6a9ac74a4f2e104e55c87272",
+      "name": "AI-generated people, events or scenes"
+    },
+    {
+      "id": "6a8fe45342cbe42b3725398e",
+      "name": "AI-manipulated"
+    }
+  ],
+  "disclaimerMessages": {
+    "6a8fe45342cbe42b3725398f": "AI-assisted",
+    "6a8fe45342cbe42b37253991": "AI-generated",
+    "6a9ac74a4f2e104e55c87272": "AI-generated people, events or scenes",
+    "6a8fe45342cbe42b3725398e": "AI-manipulated"
+  },
+  "noneChoiceId": "6a8fe45342cbe42b37253990"
+}
