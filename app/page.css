@@ -32,6 +32,18 @@
   border: none;
 }
 
+.gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  box-shadow: none;
+  border: none;
+  margin-bottom: 2rem;
+}
+
 .filter-section {
   display: flex;
   flex-direction: column;
@@ -132,12 +144,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1.25rem;
-  margin-bottom: 2.5rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 1.25rem;
-  box-shadow: none;
-  border: none;
   min-height: 280px;
 }
 
@@ -522,4 +528,28 @@
 
 .clear-crop-btn:hover {
   background-color: #b91c1c;
+}
+
+.step-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #171717;
+  margin: 0 0 1rem 0;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #0057bc;
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
 }

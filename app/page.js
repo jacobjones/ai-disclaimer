@@ -270,7 +270,10 @@ export default function Home() {
 
       <div className="controls">
         <div className="filter-section">
-          <label>Filter by level of AI assistance</label>
+          <h2 className="step-heading">
+            <span className="step-number">1</span>
+            Filter by level of AI assistance
+          </h2>
           <div className="filter-checkboxes">
             <div className="checkbox-group">
               <input
@@ -304,7 +307,13 @@ export default function Home() {
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="gallery">
+      <div className="gallery-section">
+        <h2 className="step-heading">
+          <span className="step-number">2</span>
+          Select an image from Optimizely DAM
+        </h2>
+
+        <div className="gallery">
         {loading ? (
           <div className="loading-container" style={{ width: '100%', margin: '0 -1.5rem' }}>
             <div className="spinner"></div>
@@ -339,30 +348,35 @@ export default function Home() {
         )}
       </div>
 
-      {!loading && (
-        <div className="pagination">
-            <button
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0 || loading}
-              className="pagination-btn"
-            >
-              Previous
-            </button>
-            <span className="pagination-info">
-              Page {page + 1} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page >= totalPages - 1 || loading}
-              className="pagination-btn"
-            >
-              Next
-            </button>
-          </div>
-      )}
+        {!loading && (
+          <div className="pagination">
+              <button
+                onClick={() => setPage(Math.max(0, page - 1))}
+                disabled={page === 0 || loading}
+                className="pagination-btn"
+              >
+                Previous
+              </button>
+              <span className="pagination-info">
+                Page {page + 1} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page >= totalPages - 1 || loading}
+                className="pagination-btn"
+              >
+                Next
+              </button>
+            </div>
+        )}
+      </div>
 
       {selectedAsset && (
         <div className="preview-section">
+          <h2 className="step-heading">
+            <span className="step-number">3</span>
+            Optionally crop the image
+          </h2>
           <div className="preview-container">
             <div className="crop-section">
               <ReactImageCrop
@@ -415,6 +429,10 @@ export default function Home() {
             </div>
             <div className="preview-details">
               <h2>{selectedAsset.name}</h2>
+              <h3 className="step-heading">
+                <span className="step-number">4</span>
+                Select a language for the disclaimer and download
+              </h3>
               <div className="download-controls">
                 <button
                   onClick={handleDownload}
